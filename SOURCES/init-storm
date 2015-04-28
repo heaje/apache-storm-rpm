@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 ### BEGIN INIT INFO
-# Provides: $storm-ui
+# Provides: $storm-daemon
 # Default-Start: 3 4 5
 # Default-Stop: 0 1 6
 ### END INIT INFO
@@ -9,21 +9,33 @@
 # Source function library.
 . /etc/init.d/functions
 RETVAL=0
-PID_FILE="/var/run/storm/storm-ui.pid"
+
+NAME=$(basename ${0})
 
 # Source config
-. /etc/sysconfig/storm
+[ -f /etc/sysconfig/storm-common ] && . /etc/sysconfig/storm-common
+[ -f /etc/sysconfig/${NAME} ] && . /etc/sysconfig/${NAME}
+
+
+LOG_DIR=${LOG_DIR:="/var/log/storm"}
+PID_FILE=${PID_FILE:="/var/run/storm/${NAME}.pid"}
+MEMORY_JVM_OPTS=${MEMORY_JVM_OPTS:="-Xmx512M"}
+
+if [ -z "${CLASSNAME}" ]; then
+  echo "\$CLASSNAME variable is not set.  Cannot run ${NAME}"
+  exit 2
+fi
 
 CLASSPATH="$STORM_LIB/*:$STORM_HOME:$STORM_CONF"
 
 start() {
     if storm_status>/dev/null; then
-    	echo "Storm ui is already running."
+    	echo "${NAME} is already running."
     	exit 1
     else
-    	echo "Starting storm ui..."
+    	echo "Starting ${NAME}..."
     fi 
-    STORM_CMD="java -$JVM_TYPE -Xmx$UI_JVM_MEMORY -Duser.dir=\"$STORM_HOME\" -Djava.library.path=\"$JAVA_LIBRARY_PATH\" -Dstorm.options=\"$STORM_OPTIONS\" -Dstorm.home=\"$STORM_HOME\" -Dstorm.log.dir=\"$UI_LOG_DIR\" -Dlogfile.name=ui.log $UI_JVM_OPTS -cp \"$CLASSPATH\" backtype.storm.ui.core &"
+    STORM_CMD="java ${MEMORY_JVM_OPTS} ${STORM_OPTIONS} ${LOGBACK_OPTION} -Dstorm.log.dir=\"${LOG_DIR}\" -Dlogfile.name=${LOGFILE_NAME} ${EXTRA_JVM_OPTS} -cp \"$CLASSPATH\" ${CLASSNAME} &"
     runuser --shell=/bin/bash --preserve-environment $STORM_USER --command="$STORM_CMD > /dev/null && echo \$! > $PID_FILE"
     RETVAL=$?
     storm_status
@@ -32,7 +44,7 @@ start() {
 
 stop() {
     if storm_status; then
-        echo "Stopping storm ui..."
+        echo "Stopping ${NAME}..."
         killproc -p $PID_FILE -TERM
         RETVAL=$?
         storm_status
@@ -43,7 +55,7 @@ stop() {
 }
 
 storm_status() {
-    status -p $PID_FILE storm-ui
+    status -p $PID_FILE ${NAME}
     return $?
 }
 
