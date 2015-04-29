@@ -1,0 +1,14 @@
+# This file contains default configurations for storm startup
+LOG_DIR="__LOG_DIR__"
+STORM_HOME="__STORM_HOME__"
+STORM_LIB="${STORM_HOME}/lib"
+STORM_CONF="/etc/storm"
+STORM_USER="__STORM_USER__"
+
+# CLASSPATH includes these directories for these reasons
+# 1. ${STORM_LIB}/* => Jars for the various daemons and other stuff
+# 2. ${STORM_CONF} => To find the storm.yaml file
+# 3. ${STORM_HOME} => For the UI to find the "public" directory
+
+CLASSPATH="${STORM_LIB}/*:${STORM_CONF}:${STORM_HOME}"
+LOGBACK_CONFIG_FILE="${STORM_HOME}/logback/cluster.xml"

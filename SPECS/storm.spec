@@ -9,7 +9,7 @@
 
 Name:          storm
 Version:       0.9.4
-Release:       1%{dist}
+Release:       4%{dist}
 BuildArch:     noarch
 Summary:       Apache Storm Complex Event Processing    
 Group:         Applications/Internet
@@ -20,13 +20,9 @@ BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires(pre): shadow-utils
 Requires:      %{name}-conf = %{version}-%{release}
 Source1:       init-storm
-Source2:       sysconfig-logviewer
-Source3:       sysconfig-nimbus
-Source4:       sysconfig-common
-Source5:       sysconfig-supervisor
-Source6:       sysconfig-ui
-Source7:       storm.yaml
-Source8:       logback.xml
+Source2:       sysconfig-storm
+Source3:       storm.yaml
+Source4:       logback.xml
 
 %description
 Storm is a distributed realtime computation system.
@@ -112,7 +108,6 @@ The Storm UI - a site you can access from the browser that gives diagnostics on 
 %{__mkdir_p} %{buildroot}%{_initddir}
 %{__mkdir_p} %{buildroot}%{storm_pid_dir}
 %{__mkdir_p} %{buildroot}%{_var}/lib/storm
-#%{__mkdir_p} %{buildroot}%{storm_log_dir}/{nimbus,supervisor,ui}
 %{__mkdir_p} %{buildroot}%{storm_log_dir}
 %{__mkdir_p} %{buildroot}%{_docdir}/%{name}-%{version}
 %{__mkdir_p} %{buildroot}%{_bindir}
@@ -120,13 +115,9 @@ The Storm UI - a site you can access from the browser that gives diagnostics on 
 # Copy the storm files to the right places
 %{__cp} -R * %{buildroot}%{storm_home}/.
 %{__cp} %{SOURCE1} %{buildroot}%{storm_home}/init/init-storm
-%{__cp} %{SOURCE7} %{buildroot}%{storm_home}/conf/storm.yaml
-%{__cp} %{SOURCE8} %{buildroot}%{storm_home}/logback/cluster.xml
-%{__cp} %{SOURCE2} %{buildroot}%{_sysconfdir}/sysconfig/storm-logviewer
-%{__cp} %{SOURCE3} %{buildroot}%{_sysconfdir}/sysconfig/storm-nimbus
-%{__cp} %{SOURCE4} %{buildroot}%{_sysconfdir}/sysconfig/storm-common
-%{__cp} %{SOURCE5} %{buildroot}%{_sysconfdir}/sysconfig/storm-supervisor
-%{__cp} %{SOURCE6} %{buildroot}%{_sysconfdir}/sysconfig/storm-ui
+%{__cp} %{SOURCE2} %{buildroot}%{_sysconfdir}/sysconfig/storm
+%{__cp} %{SOURCE3} %{buildroot}%{storm_home}/conf/storm.yaml
+%{__cp} %{SOURCE4} %{buildroot}%{storm_home}/logback/cluster.xml
 %{__mv} %{buildroot}%{storm_home}/{CHANGELOG.md,DISCLAIMER,LICENSE,NOTICE,README.markdown,SECURITY.md} %{buildroot}%{_docdir}/%{name}-%{version}/.
 
 # Make convenient symlinks
@@ -141,9 +132,9 @@ The Storm UI - a site you can access from the browser that gives diagnostics on 
 %{__ln_s} -f %{storm_home}/init/init-storm %{buildroot}%{_initddir}/storm-ui
 
 # Edit config files for environment
-%{__sed} -i "s,__STORM_USER__,%{storm_user},g" %{buildroot}%{_sysconfdir}/sysconfig/storm-common
-%{__sed} -i "s,__STORM_HOME__,%{storm_home},g" %{buildroot}%{_sysconfdir}/sysconfig/storm-common
-%{__sed} -i "s,__LOG_DIR__,%{storm_log_dir},g" %{buildroot}%{_sysconfdir}/sysconfig/storm-common
+%{__sed} -i "s,__STORM_USER__,%{storm_user},g" %{buildroot}%{_sysconfdir}/sysconfig/storm
+%{__sed} -i "s,__STORM_HOME__,%{storm_home},g" %{buildroot}%{_sysconfdir}/sysconfig/storm
+%{__sed} -i "s,__LOG_DIR__,%{storm_log_dir},g" %{buildroot}%{_sysconfdir}/sysconfig/storm
 %{__sed} -i "s,__LOCAL_DIR__,%{storm_user_home},g" %{buildroot}%{storm_home}/conf/storm.yaml
 
 
@@ -174,7 +165,7 @@ getent passwd %{storm_user} >/dev/null || /usr/sbin/useradd --comment="Apache St
 
 %files conf
 %defattr(644,%{storm_user},%{storm_group},755)
-%config %{_sysconfdir}/sysconfig/storm-common
+%config %{_sysconfdir}/sysconfig/storm
 %config %{_sysconfdir}/storm
 %config %{storm_home}/conf
 %config %{storm_home}/logback
@@ -187,30 +178,24 @@ getent passwd %{storm_user} >/dev/null || /usr/sbin/useradd --comment="Apache St
 
 %files logviewer
 %defattr(755,root,root,-)
-%config %{_sysconfdir}/sysconfig/storm-logviewer
-%attr(755,-,-) %{_initddir}/storm-logviewer
+%{_initddir}/storm-logviewer
 
 
 %files nimbus
 %defattr(755,root,root,-)
-%config %{_sysconfdir}/sysconfig/storm-nimbus
 %attr(755,-,-) %{_initddir}/storm-nimbus
-#%attr(-,%{storm_user},%{storm_group}) %{storm_log_dir}/nimbus
 
 
 %files supervisor
 %defattr(755,root,root,-)
-%config %{_sysconfdir}/sysconfig/storm-supervisor
 %attr(755,-,-) %{_initddir}/storm-supervisor
-#%attr(-,%{storm_user},%{storm_group}) %{storm_log_dir}/supervisor
 
 
 %files ui
 %defattr(-,root,root,-)
 %{storm_home}/public
-%config %{_sysconfdir}/sysconfig/storm-ui
 %attr(755,-,-) %{_initddir}/storm-ui
-#%attr(-,%{storm_user},%{storm_group}) %{storm_log_dir}/ui
+
 
 %changelog
 * Tue Apr 28 2015 Corey Shaw <corey.shaw@gmail.com> 0.9.4-1

@@ -11,22 +11,31 @@
 RETVAL=0
 
 NAME=$(basename ${0})
+SERVICE_NAME=$(echo "${NAME}" | cut -d "-" -f2)
 
 # Source config
-[ -f /etc/sysconfig/storm-common ] && . /etc/sysconfig/storm-common
+[ -f /etc/sysconfig/storm ] && . /etc/sysconfig/storm
 [ -f /etc/sysconfig/${NAME} ] && . /etc/sysconfig/${NAME}
 
+if [ -z "${CLASSNAME}" ]; then
+	[ "ui" == "${SERVICE_NAME}" ] && CLASSNAME="backtype.storm.ui.core" || CLASSNAME="backtype.storm.daemon.${SERVICE_NAME}"
+fi
 
-LOG_DIR=${LOG_DIR:="/var/log/storm"}
-PID_FILE=${PID_FILE:="/var/run/storm/${NAME}.pid"}
-MEMORY_JVM_OPTS=${MEMORY_JVM_OPTS:="-Xmx512M"}
+STORM_HOME=${STORM_HOME:-"/usr/lib/storm"}
+STORM_OPTIONS=${STORM_OPTIONS:-"-server"}
+LOG_DIR=${LOG_DIR:-"/var/log/storm"}
+PID_FILE=${PID_FILE:-"/var/run/storm/${NAME}.pid"}
+LOGFILE_NAME=${LOGFILE_NAME:-"${SERVICE_NAME}.log"}
+LOGBACK_CONFIG_FILE=${LOGBACK_CONFIG_FILE:-"/etc/storm/logback/cluster.xml"}
+MEMORY_JVM_OPTS=${MEMORY_JVM_OPTS:-"-Xmx256M"}
+CLASSPATH=${CLASSPATH:-"/usr/lib/storm/lib/*"}
+EXTRA_JVM_OPTS=${EXTRA_JVM_OPTS:-""}
+
 
 if [ -z "${CLASSNAME}" ]; then
   echo "\$CLASSNAME variable is not set.  Cannot run ${NAME}"
   exit 2
 fi
-
-CLASSPATH="$STORM_LIB/*:$STORM_HOME:$STORM_CONF"
 
 start() {
     if storm_status>/dev/null; then
@@ -35,7 +44,7 @@ start() {
     else
     	echo "Starting ${NAME}..."
     fi 
-    STORM_CMD="java ${MEMORY_JVM_OPTS} ${STORM_OPTIONS} ${LOGBACK_OPTION} -Dstorm.log.dir=\"${LOG_DIR}\" -Dlogfile.name=${LOGFILE_NAME} ${EXTRA_JVM_OPTS} -cp \"$CLASSPATH\" ${CLASSNAME} &"
+    STORM_CMD="java ${MEMORY_JVM_OPTS} ${EXTRA_JVM_OPTS} -server -Dlogback.configurationFile=\"${LOGBACK_CONFIG_FILE}\" -Dstorm.log.dir=\"${LOG_DIR}\" -Dlogfile.name=${LOGFILE_NAME} -cp \"$CLASSPATH\" ${CLASSNAME} &"
     runuser --shell=/bin/bash --preserve-environment $STORM_USER --command="$STORM_CMD > /dev/null && echo \$! > $PID_FILE"
     RETVAL=$?
     storm_status

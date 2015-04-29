@@ -1,6 +1,0 @@
-# This file contains the configuration for the storm Nimbus daemon
-CLASSNAME="backtype.storm.daemon.supervisor"
-LOGFILE_NAME="supervisor.log"
-
-MEMORY_JVM_OPTS="-Xmx512M"
-EXTRA_JMV_OPTS=""
