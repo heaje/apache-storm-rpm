@@ -44,7 +44,7 @@ start() {
     else
     	echo "Starting ${NAME}..."
     fi 
-    STORM_CMD="java ${MEMORY_JVM_OPTS} ${EXTRA_JVM_OPTS} -server -Dlogback.configurationFile=\"${LOGBACK_CONFIG_FILE}\" -Dstorm.log.dir=\"${LOG_DIR}\" -Dlogfile.name=${LOGFILE_NAME} -cp \"$CLASSPATH\" ${CLASSNAME} &"
+    STORM_CMD="java ${MEMORY_JVM_OPTS} ${EXTRA_JVM_OPTS} -server -Dstorm.home=\"${STORM_HOME}\" -Dlogback.configurationFile=\"${LOGBACK_CONFIG_FILE}\" -Dstorm.log.dir=\"${LOG_DIR}\" -Dlogfile.name=${LOGFILE_NAME} -cp \"$CLASSPATH\" ${CLASSNAME} &"
     runuser --shell=/bin/bash --preserve-environment $STORM_USER --command="$STORM_CMD > /dev/null && echo \$! > $PID_FILE"
     RETVAL=$?
     storm_status

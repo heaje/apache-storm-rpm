@@ -9,7 +9,7 @@
 
 Name:          storm
 Version:       0.9.4
-Release:       4%{dist}
+Release:       5%{dist}
 BuildArch:     noarch
 Summary:       Apache Storm Complex Event Processing    
 Group:         Applications/Internet
@@ -198,5 +198,9 @@ getent passwd %{storm_user} >/dev/null || /usr/sbin/useradd --comment="Apache St
 
 
 %changelog
+* Fri May 1 2015 Corey Shaw <corey.shaw@gmail.com> 0.9.4-5
+- Dropped requirement of service specific sysconfig files (though they can still be used)
+- Fixed bug where worker processes weren't creating log file
+
 * Tue Apr 28 2015 Corey Shaw <corey.shaw@gmail.com> 0.9.4-1
 - First build of SPEC
