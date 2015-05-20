@@ -9,7 +9,7 @@
 
 Name:          storm
 Version:       0.9.4
-Release:       5%{dist}
+Release:       5
 BuildArch:     noarch
 Summary:       Apache Storm Complex Event Processing    
 Group:         Applications/Internet
