@@ -8,14 +8,14 @@
 %define storm_pid_dir %{_var}/run/storm
 
 Name:          storm
-Version:       0.9.4
-Release:       5
+Version:       0.9.5
+Release:       1
 BuildArch:     noarch
 Summary:       Apache Storm Complex Event Processing    
 Group:         Applications/Internet
 License:       Apache License Version 2.0
 URL:           https://storm.apache.org/
-Source:        http://www.apache.org/dyn/closer.cgi/storm/apache-storm-0.9.4/apache-storm-0.9.4.tar.gz
+Source:        http://www.apache.org/dyn/closer.cgi/storm/apache-%{name}-%{version}/apache-%{name}-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires(pre): shadow-utils
 Requires:      %{name}-conf = %{version}-%{release}
