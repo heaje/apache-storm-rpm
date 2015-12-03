@@ -6,9 +6,10 @@
 %define storm_home %{_prefix}/lib/storm
 %define storm_log_dir %{_var}/log/storm
 %define storm_pid_dir %{_var}/run/storm
+%define storm_log_conf_dir %{storm_home}/log4j2
 
 Name:          storm
-Version:       0.9.5
+Version:       0.10.0
 Release:       1
 BuildArch:     noarch
 Summary:       Apache Storm Complex Event Processing    
@@ -18,11 +19,11 @@ URL:           https://storm.apache.org/
 Source:        http://www.apache.org/dyn/closer.cgi/storm/apache-%{name}-%{version}/apache-%{name}-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires(pre): shadow-utils
-Requires:      %{name}-conf = %{version}-%{release}
-Source1:       init-storm
+Obsoletes:     %{name}-conf
+Source1:       init-storm.sh
 Source2:       sysconfig-storm
 Source3:       storm.yaml
-Source4:       logback.xml
+Source4:       log4j2.xml
 
 %description
 Storm is a distributed realtime computation system.
@@ -33,14 +34,6 @@ can be used with any programming language, is used by many companies, and is a l
 Storm integrates with the queueing and database technologies you already use.
 A Storm topology consumes streams of data and processes those streams in arbitrarily complex
 ways, repartitioning the streams between each stage of the computation however needed.
-
-
-%package conf
-Summary: Apache Storm Configuration Files
-Group:   Applications/Internet
-
-%description conf
-Configuration files for Apache Storm
 
 
 %package examples
@@ -117,11 +110,12 @@ The Storm UI - a site you can access from the browser that gives diagnostics on 
 %{__cp} %{SOURCE1} %{buildroot}%{storm_home}/init/init-storm
 %{__cp} %{SOURCE2} %{buildroot}%{_sysconfdir}/sysconfig/storm
 %{__cp} %{SOURCE3} %{buildroot}%{storm_home}/conf/storm.yaml
-%{__cp} %{SOURCE4} %{buildroot}%{storm_home}/logback/cluster.xml
+%{__cp} %{SOURCE4} %{buildroot}%{storm_log_conf_dir}/cluster.xml
 %{__mv} %{buildroot}%{storm_home}/{CHANGELOG.md,DISCLAIMER,LICENSE,NOTICE,README.markdown,SECURITY.md} %{buildroot}%{_docdir}/%{name}-%{version}/.
+echo "%{version}-%{release}" > %{buildroot}%{storm_home}/RELEASE
 
 # Make convenient symlinks
-%{__ln_s} -f %{storm_home}/logback %{buildroot}%{storm_home}/conf/logback
+%{__ln_s} -f %{storm_home}/log4j2 %{buildroot}%{storm_home}/conf/log4j2
 %{__ln_s} -f %{storm_home}/conf %{buildroot}%{_sysconfdir}/storm
 %{__ln_s} -f %{storm_home}/bin/storm %{buildroot}%{_bindir}/storm
 %{__ln_s} -f %{storm_log_dir} %{buildroot}%{storm_home}/logs
@@ -137,6 +131,9 @@ The Storm UI - a site you can access from the browser that gives diagnostics on 
 %{__sed} -i "s,__LOG_DIR__,%{storm_log_dir},g" %{buildroot}%{_sysconfdir}/sysconfig/storm
 %{__sed} -i "s,__LOCAL_DIR__,%{storm_user_home},g" %{buildroot}%{storm_home}/conf/storm.yaml
 
+# Delete unused files
+%{__rm} -f %{buildroot}%{storm_home}/bin/{storm.cmd,storm-config.cmd}
+%{__rm} -rf %{buildroot}%{storm_home}/{extlib,extlib-daemon}
 
 %clean
 [ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
@@ -156,19 +153,17 @@ getent passwd %{storm_user} >/dev/null || /usr/sbin/useradd --comment="Apache St
 %{storm_home}/bin
 %{storm_home}/external
 %{storm_home}/lib
-%attr(755,root,root) %{storm_home}/init
+%attr(755,-,-) %{storm_home}/init
 %{storm_home}/logs
 %{storm_home}/pids
 %attr(755,-,-) %{_bindir}/storm
 %attr(-,%{storm_user},%{storm_group}) %{storm_log_dir}
-
-
-%files conf
-%defattr(644,%{storm_user},%{storm_group},755)
-%config %{_sysconfdir}/sysconfig/storm
-%config %{_sysconfdir}/storm
-%config %{storm_home}/conf
-%config %{storm_home}/logback
+%dir %{_sysconfdir}/storm
+%dir %{storm_home}/conf
+%dir %{storm_log_conf_dir}
+%config %attr(644,%{storm_user},%{storm_group}) %{_sysconfdir}/sysconfig/storm
+%config %attr(644,%{storm_user},%{storm_group}) %{storm_home}/conf/*
+%config %attr(644,%{storm_user},%{storm_group}) %{storm_log_conf_dir}/*
 
 
 %files examples
@@ -198,9 +193,13 @@ getent passwd %{storm_user} >/dev/null || /usr/sbin/useradd --comment="Apache St
 
 
 %changelog
+* Wed Nov 11 2015 Corey Shaw <corey.shaw@gmail.com> 0.10.0-1
+- Updated to 0.10.0
+
 * Fri May 1 2015 Corey Shaw <corey.shaw@gmail.com> 0.9.4-5
 - Dropped requirement of service specific sysconfig files (though they can still be used)
 - Fixed bug where worker processes weren't creating log file
 
 * Tue Apr 28 2015 Corey Shaw <corey.shaw@gmail.com> 0.9.4-1
 - First build of SPEC
+
